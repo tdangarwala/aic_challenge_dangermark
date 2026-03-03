@@ -1,0 +1,16 @@
+{
+  "name": "AIC Dev (CPU)",
+  "build": {
+    "dockerfile": "Dockerfile"
+  },
+  "remoteUser": "vscode",
+  "postCreateCommand": "curl -fsSL https://pixi.sh/install.sh | bash && source ~/.bashrc && pixi install",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-iot.vscode-ros",
+        "ms-python.python"
+      ]
+    }
+  }
+}
