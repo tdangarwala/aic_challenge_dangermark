@@ -117,7 +117,58 @@ def get_task_board_dict(board_x, board_y, board_yaw):
                 "yaw": board_yaw
             }
         }
-    }       
+    }
+
+def generate_cable_dict(cable_name, cable_type, gripper_z):
+    return {
+        "cables": {
+            cable_name: {
+                "pose": {
+                    "gripper_offset": {
+                        "x": 0.0 + random.uniform(-0.002, 0.002),
+                        "y": 0.015385 + random.uniform(-0.002, 0.002),
+                        "z": gripper_z + random.uniform(-0.002, 0.002),
+                    },
+                    "roll": 0.4432 + random.uniform(-0.04, 0.04),
+                    "pitch": -0.4838 + random.uniform(-0.04, 0.04),
+                    "yaw": 1.3303 + random.uniform(-0.04, 0.04),
+                },
+                "attach_cable_to_gripper": True,
+                "cable_type": cable_type,
+            }
+        },
+    }  
+
+def generate_task_dict(cable_name, plug_type, plug_name, port_type, port_name, module_name):
+    return {
+        "tasks": {
+            "task_1": {
+                "cable_type": "sfp_sc",
+                "cable_name": cable_name,
+                "plug_type":  plug_type,
+                "plug_name":  plug_name,
+                "port_type":  port_type,
+                "port_name":  port_name,
+                "target_module_name": module_name,
+                "time_limit": 180,
+            }
+        },
+    }
+
+def generate_scene_dict(board_x, board_y, board_yaw, rails, cable_name, cable_type, gripper_z):
+    return {
+        "scene": {
+            "task_board": {
+                "pose": {
+                    "x": board_x, "y": board_y, "z": 1.14,
+                    "roll": 0.0, "pitch": 0.0, "yaw": board_yaw,
+                },
+                **rails,
+                **MOUNT_RAILS,
+            },
+            **generate_cable_dict(cable_name, cable_type, gripper_z),
+        }
+    }     
 
 def generate_config(trial, idx):
     config = {}
@@ -139,7 +190,6 @@ def generate_config(trial, idx):
         port_name     = trial["target_port"].lower()   # sfp_port_0 or sfp_port_1
         module_name   = f"nic_card_mount_{nic_rail}"
         gripper_z     = 0.04245
-        cable_type_reversed = "sfp_sc_cable"
     else:
         sc_dict = get_sc_dict()
         # figure out which sc_rail was chosen so we can name the module
@@ -159,49 +209,15 @@ def generate_config(trial, idx):
         module_name   = f"sc_port_{sc_rail}"
         gripper_z     = 0.04045
 
-    config.update(SCORING_CONFIG)
-    config.update(TASK_BOARD_LIMITS)
-    
+    config_path = f"/tmp/aic_trial_{idx}.yaml"
+
     config = {
+        **SCORING_CONFIG,
+        **TASK_BOARD_LIMITS,
         "trials": {
             "trial_1": {
-                "scene": {
-                    "task_board": {
-                        "pose": {
-                            "x": board_x, "y": board_y, "z": 1.14,
-                            "roll": 0.0, "pitch": 0.0, "yaw": board_yaw,
-                        },
-                        **rails,
-                    },
-                    "cables": {
-                        cable_name: {
-                            "pose": {
-                                "gripper_offset": {
-                                    "x": 0.0 + random.uniform(-0.002, 0.002),
-                                    "y": 0.015385 + random.uniform(-0.002, 0.002),
-                                    "z": gripper_z + random.uniform(-0.002, 0.002),
-                                },
-                                "roll": 0.4432 + random.uniform(-0.04, 0.04),
-                                "pitch": -0.4838 + random.uniform(-0.04, 0.04),
-                                "yaw": 1.3303 + random.uniform(-0.04, 0.04),
-                            },
-                            "attach_cable_to_gripper": True,
-                            "cable_type": cable_type,
-                        }
-                    },
-                },
-                "tasks": {
-                    "task_1": {
-                        "cable_type": "sfp_sc",
-                        "cable_name": cable_name,
-                        "plug_type":  plug_type,
-                        "plug_name":  plug_name,
-                        "port_type":  port_type,
-                        "port_name":  port_name,
-                        "target_module_name": module_name,
-                        "time_limit": 180,
-                    }
-                },
+                **generate_scene_dict(board_x, board_y, board_yaw, rails, cable_name, cable_type, gripper_z),
+                **generate_task_dict(cable_name, plug_type, plug_name, port_type, port_name, module_name),
             }
         },
         "robot": {
@@ -216,7 +232,6 @@ def generate_config(trial, idx):
         },
     }
 
-    config_path = f"/tmp/aic_trial_{idx}.yaml"
     with open(config_path, "w") as f:
         yaml.dump(config, f)
 
