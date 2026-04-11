@@ -194,8 +194,8 @@ class CheatCodeTeleop(Teleoperator):
         # combine linear and angular velocity into a single 6D command
         angular_velocity = self.calculate_angular_velocity(port_q, plug_tip_q, gripper_q)
 
-        return np.concatenate([linear_velocity, angular_velocity])
-    
+        action_vector = np.concatenate([linear_velocity, angular_velocity])
+        return {"action": action_vector}
 
     def disconnect(self):
         self._is_connected = False

@@ -19,10 +19,10 @@ BOARD_Y_LIMITS     = (-0.25, 0.25)
 BOARD_YAW_LIMITS   = (2.8, 3.4)
 
 TRIALS = [
-    {"name": "sfp_port0", "type": "sfp", "target_port": "SFP_PORT_0", "num_episodes": 30},
-    {"name": "sfp_port1", "type": "sfp", "target_port": "SFP_PORT_1", "num_episodes": 30},
-    {"name": "sc_port0",  "type": "sc",  "target_port": "SC_PORT_0",  "num_episodes": 20},
-    {"name": "sc_port1",  "type": "sc",  "target_port": "SC_PORT_1",  "num_episodes": 20},
+    {"name": "sfp_port0", "type": "sfp", "target_port": "SFP_PORT_0", "num_episodes": 1},
+    {"name": "sfp_port1", "type": "sfp", "target_port": "SFP_PORT_1", "num_episodes": 1},
+    {"name": "sc_port0",  "type": "sc",  "target_port": "SC_PORT_0",  "num_episodes": 1},
+    {"name": "sc_port1",  "type": "sc",  "target_port": "SC_PORT_1",  "num_episodes": 1},
 ]
 
 SCORING_CONFIG = {
@@ -251,26 +251,30 @@ def run_episode(trial, idx):
 
     # generate randomised config for this episode
     config_path, module_name, plug_name = generate_config(trial, idx)
-
+   
     engine_cmd = (
-        f"distrobox enter aic_eval -- ros2 run aic_engine aic_engine --ros-args "
+        f"distrobox enter -r aic_eval -- /bin/bash -c "
+        f"'. /entrypoint.sh; " # Use '.' for sourcing if 'source' behaves oddly
+        f"ros2 run aic_engine aic_engine --ros-args "
         f"-p config_file_path:={config_path} "
         f"-p ground_truth:=true "
-        f"-p use_sim_time:=true"
+        f"-p use_sim_time:=true "
+        f"-p headless:=true'" # Forces the engine to skip GUI dependencies
     )
+    
     engine_proc = subprocess.Popen(engine_cmd, shell=True)
     time.sleep(30)
 
     record_cmd = (
         f"pixi run lerobot-record "
-        f"--repo-id {repo_id} "
-        f"--episode-idx {idx} "
-        f"--teleoperator.type=cheatcodeteleop "
-        f"--teleoperator.cable_name={('sfp_sc_cable' if trial['type'] == 'sfp' else 'sfp_sc_cable_reversed')} "
-        f"--teleoperator.plug_name={plug_name} "
-        f"--teleoperator.module_name={module_name} "
-        f"--teleoperator.port_name={trial['target_port'].lower()} "
-        f"--ups 20"
+        f"--dataset.repo_id {repo_id} "
+        f"--dataset.num_episodes 1 " # We are doing 1 at a time
+        f"--teleop.type=cheatcodeteleop "
+        f"--teleop.cable_name={('sfp_sc_cable' if trial['type'] == 'sfp' else 'sfp_sc_cable_reversed')} "
+        f"--teleop.plug_name={plug_name} "
+        f"--teleop.module_name={module_name} "
+        f"--teleop.port_name={trial['target_port'].lower()} "
+        f"--dataset.fps 20" # 'ups' is now often 'fps' in newer configs
     )
 
     record_proc = subprocess.Popen(record_cmd, shell=True)
@@ -278,7 +282,8 @@ def run_episode(trial, idx):
 
     record_proc.terminate()
     engine_proc.terminate()
-    subprocess.run("pkill -9 -f gz", shell=True)
+    subprocess.run("distrobox enter -r aic_eval -- pkill -9 -f gz", shell=True)
+    subprocess.run("distrobox enter -r aic_eval -- pkill -9 -f ros", shell=True)
     time.sleep(5)
 
 

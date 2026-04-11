@@ -453,6 +453,8 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/linux-64/zenoh-rust-abi-1.7.2.1.85.0-h8619998_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/zipp-3.23.0-pyhcf101f3_1.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/zstd-1.5.7-hb78ec9c_6.conda
+      - conda: act_policy_node_dm
+        build: hb0f4dca_0
       - conda: aic_example_policies
         build: hb0f4dca_0
       - conda: aic_interfaces/aic_control_interfaces
@@ -945,6 +947,8 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/zenoh-rust-abi-1.7.2.1.85.0-h2abaa9c_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/zipp-3.23.0-pyhcf101f3_1.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/zstd-1.5.7-hbf9d68e_6.conda
+      - conda: act_policy_node_dm
+        build: h60d57d3_0
       - conda: aic_example_policies
         build: h60d57d3_0
       - conda: aic_interfaces/aic_control_interfaces
@@ -7625,6 +7629,52 @@ packages:
   purls: []
   size: 185448
   timestamp: 1748645057503
+- conda: act_policy_node_dm
+  name: ros-kilted-act-policy-node-dm
+  version: 0.0.0
+  build: h60d57d3_0
+  subdir: osx-arm64
+  variants:
+    target_platform: osx-arm64
+  depends:
+  - ros-kilted-aic-control-interfaces
+  - ros-kilted-aic-model
+  - ros-kilted-aic-model-interfaces
+  - ros-kilted-aic-task-interfaces
+  - ros-kilted-geometry-msgs
+  - ros-kilted-rclpy
+  - ros-kilted-sensor-msgs
+  - ros-kilted-std-srvs
+  - ros-kilted-trajectory-msgs
+  - ros2-distro-mutex
+  - ros2-distro-mutex >=0.13.0,<0.14.0a0
+  - libcxx >=22
+  - python_abi 3.12.* *_cp312
+  - numpy >=1.23,<3
+- conda: act_policy_node_dm
+  name: ros-kilted-act-policy-node-dm
+  version: 0.0.0
+  build: hb0f4dca_0
+  subdir: linux-64
+  variants:
+    target_platform: linux-64
+  depends:
+  - ros-kilted-aic-control-interfaces
+  - ros-kilted-aic-model
+  - ros-kilted-aic-model-interfaces
+  - ros-kilted-aic-task-interfaces
+  - ros-kilted-geometry-msgs
+  - ros-kilted-rclpy
+  - ros-kilted-sensor-msgs
+  - ros-kilted-std-srvs
+  - ros-kilted-trajectory-msgs
+  - ros2-distro-mutex
+  - ros2-distro-mutex >=0.13.0,<0.14.0a0
+  - libgcc >=15
+  - libgcc >=15
+  - libstdcxx >=15
+  - python_abi 3.12.* *_cp312
+  - numpy >=1.23,<3
 - conda: https://conda.anaconda.org/robostack-kilted/linux-64/ros-kilted-action-msgs-2.3.0-np2py312h2ed9cc7_15.conda
   sha256: f60c23a74a393283f780b86828f84184838c8d86dc08c96f19cae7f1d1d1899f
   md5: cd250d5728c4d32013f105b534630961
