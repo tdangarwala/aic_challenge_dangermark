@@ -67,6 +67,7 @@ def run_episode(trial, idx):
         f"task_board_z:=1.14 "
         f"task_board_yaw:={board_yaw:.4f} "
         f"gazebo_gui:=false "
+        f"launch_rviz:=false "
         f"{rail_params}'"
     )
 
@@ -109,6 +110,7 @@ def run_episode(trial, idx):
     engine_proc.terminate()
     subprocess.run("distrobox enter -r aic_eval -- pkill -9 -f gz", shell=True)
     subprocess.run("distrobox enter -r aic_eval -- pkill -9 -f ros", shell=True)
+    subprocess.run("distrobox enter -r aic_eval -- pkill -9 -f zenoh", shell=True)
     time.sleep(5)
 
 if __name__ == "__main__":
