@@ -99,7 +99,7 @@ def run_episode(trial, idx):
 
     engine_proc = subprocess.Popen(engine_cmd, shell=True)
     print("Waiting for sim to initialise...")
-    time.sleep(30)
+    time.sleep(120)
 
     record_proc = subprocess.Popen(record_cmd, shell=True)
     record_proc.wait()
