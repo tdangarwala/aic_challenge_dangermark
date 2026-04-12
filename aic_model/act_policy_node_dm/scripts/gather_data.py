@@ -72,9 +72,9 @@ def run_episode(trial, idx):
     )
 
     record_cmd = (
+        "distrobox enter -r aic_eval -- /bin/bash -c "
+        "'. /entrypoint.sh; "
         "cd ~/aic_challenge_dangermark && "
-        "RMW_IMPLEMENTATION=rmw_zenoh_cpp "
-        "ZENOH_CONFIG_OVERRIDE='mode=\"peer\";connect/endpoints=[\"tcp/localhost:7447\"];transport/shared_memory/enabled=false' "
         "pixi run lerobot-record "
         "--robot.type=aic_controller "
         "--robot.id=aic "
