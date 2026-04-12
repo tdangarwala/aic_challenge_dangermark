@@ -71,7 +71,7 @@ def run_episode(trial, idx):
     )
 
     record_cmd = (
-        "cd ~/ws_aic/src/aic && "
+        "cd ~/aic_challenge_dangermark &&"
         "pixi run lerobot-record "
         "--robot.type=aic_controller "
         "--robot.id=aic "
