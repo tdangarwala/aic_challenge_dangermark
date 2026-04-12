@@ -385,6 +385,19 @@ class CheatCodeTeleop(Teleoperator):
     @property
     def is_connected(self):
         return self._is_connected
+    
+    @property
+    def is_calibrated(self) -> bool:
+        return True
+
+    def calibrate(self) -> None:
+        pass
+
+    def configure(self) -> None:
+        pass
+
+    def send_feedback(self, feedback) -> None:
+        pass
 
     def connect(self, calibrate: bool = True) -> None:
         if self._is_connected:
