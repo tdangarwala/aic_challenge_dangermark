@@ -50,9 +50,42 @@ def run_episode(trial, idx):
         plug_name   = "sc_tip"
         cable_type  = "sfp_sc_cable_reversed"
         rail_params = (
-            f"sc_port_rail_{sc_rail}_present:=true "
-            f"sc_port_rail_{sc_rail}_translation:={random.uniform(*SC_RAIL_LIMITS):.4f} "
+            f"sc_port_{sc_rail}_present:=true "
+            f"sc_port_{sc_rail}_translation:={random.uniform(*SC_RAIL_LIMITS):.4f} "
         )
+
+    # Write record script to file to avoid quoting issues
+    record_script = f"""#!/bin/bash
+    source /ws_aic/install/setup.bash
+    export RMW_IMPLEMENTATION=rmw_zenoh_cpp
+    cd ~/aic_challenge_dangermark
+    pixi run lerobot-record \
+        --robot.type=aic_controller \
+        --robot.id=aic \
+        --robot.teleop_target_mode=cartesian \
+        --robot.teleop_frame_id=base_link \
+        --teleop.type=cheatcodeteleop \
+        --teleop.id=aic \
+        --teleop.cable_name={cable_type} \
+        --teleop.plug_name={plug_name} \
+        --teleop.module_name={module_name} \
+        --teleop.port_name={trial['target_port']} \
+        --dataset.repo_id=tapan/aic_{trial['name']}_dataset \
+        --dataset.single_task="Insert {plug_name} into {trial['target_port']}" \
+        --dataset.num_episodes=1 \
+        --dataset.fps=20 \
+        --dataset.episode_time_s=180 \
+        --dataset.push_to_hub=false \
+        --dataset.private=true \
+        --display_data=false \
+        --play_sounds=false
+        """
+
+    record_script_path = f"/tmp/record_{trial['name']}_{idx}.sh"
+    with open(record_script_path, "w") as f:
+        f.write(record_script)
+
+    record_cmd = f"distrobox enter -r aic_eval -- bash {record_script_path}"
 
     engine_cmd = (
         "distrobox enter -r aic_eval -- /bin/bash -c "
@@ -69,31 +102,6 @@ def run_episode(trial, idx):
         f"gazebo_gui:=false "
         f"launch_rviz:=false "
         f"{rail_params}'"
-    )
-
-    record_cmd = (
-        "distrobox enter -r aic_eval -- /bin/bash -c "
-        "'. /entrypoint.sh; "
-        "cd ~/aic_challenge_dangermark && "
-        "pixi run lerobot-record "
-        "--robot.type=aic_controller "
-        "--robot.id=aic "
-        "--robot.teleop_target_mode=cartesian "
-        "--robot.teleop_frame_id=base_link "
-        "--teleop.type=cheatcodeteleop "
-        "--teleop.id=aic "
-        f"--teleop.cable_name={cable_type} "
-        f"--teleop.plug_name={plug_name} "
-        f"--teleop.module_name={module_name} "
-        f"--teleop.port_name={trial['target_port']} "
-        f"--dataset.repo_id=tapan/aic_{trial['name']}_dataset "
-        f"--dataset.single_task='Insert {plug_name} into {trial['target_port']}' "
-        "--dataset.num_episodes=1 "
-        "--dataset.fps=20 "
-        "--dataset.push_to_hub=false "
-        "--dataset.private=true "
-        "--display_data=false "
-        "--play_sounds=false"
     )
 
     print(f"\n{'='*60}")
