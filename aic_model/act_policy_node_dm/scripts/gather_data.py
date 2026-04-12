@@ -42,7 +42,7 @@ def run_episode(trial, idx):
             f"nic_card_mount_{nic_rail}_present:=true "
             f"nic_card_mount_{nic_rail}_translation:={random.uniform(*NIC_RAIL_LIMITS):.4f} "
             f"nic_card_mount_{nic_rail}_yaw:={random.uniform(*NIC_YAW_LIMITS):.4f} "
-            f"sfp_mount_rail_0_present:=true "
+            f"sfp_mount_rail_0_present:=true"
         )
     else:
         sc_rail     = int(trial["target_port"][-1])
@@ -51,58 +51,49 @@ def run_episode(trial, idx):
         cable_type  = "sfp_sc_cable_reversed"
         rail_params = (
             f"sc_port_{sc_rail}_present:=true "
-            f"sc_port_{sc_rail}_translation:={random.uniform(*SC_RAIL_LIMITS):.4f} "
+            f"sc_port_{sc_rail}_translation:={random.uniform(*SC_RAIL_LIMITS):.4f}"
         )
 
-    # Write record script to file to avoid quoting issues
+    engine_script = f"""#!/bin/bash
+. /entrypoint.sh ground_truth:=true spawn_task_board:=true spawn_cable:=true attach_cable_to_gripper:=true cable_type:={cable_type} task_board_x:={board_x:.4f} task_board_y:={board_y:.4f} task_board_z:=1.14 task_board_yaw:={board_yaw:.4f} gazebo_gui:=false launch_rviz:=false {rail_params}
+"""
+
+    engine_script_path = f"/tmp/engine_{trial['name']}_{idx}.sh"
+    with open(engine_script_path, "w") as f:
+        f.write(engine_script)
+
     record_script = f"""#!/bin/bash
-    source /ws_aic/install/setup.bash
-    export RMW_IMPLEMENTATION=rmw_zenoh_cpp
-    cd ~/aic_challenge_dangermark
-    pixi run lerobot-record \
-        --robot.type=aic_controller \
-        --robot.id=aic \
-        --robot.teleop_target_mode=cartesian \
-        --robot.teleop_frame_id=base_link \
-        --teleop.type=cheatcodeteleop \
-        --teleop.id=aic \
-        --teleop.cable_name={cable_type} \
-        --teleop.plug_name={plug_name} \
-        --teleop.module_name={module_name} \
-        --teleop.port_name={trial['target_port']} \
-        --dataset.repo_id=tapan/aic_{trial['name']}_dataset \
-        --dataset.single_task="Insert {plug_name} into {trial['target_port']}" \
-        --dataset.num_episodes=1 \
-        --dataset.fps=20 \
-        --dataset.episode_time_s=180 \
-        --dataset.push_to_hub=false \
-        --dataset.private=true \
-        --display_data=false \
-        --play_sounds=false
-        """
+source /ws_aic/install/setup.bash
+export RMW_IMPLEMENTATION=rmw_zenoh_cpp
+cd ~/aic_challenge_dangermark
+pixi run lerobot-record \\
+  --robot.type=aic_controller \\
+  --robot.id=aic \\
+  --robot.teleop_target_mode=cartesian \\
+  --robot.teleop_frame_id=base_link \\
+  --teleop.type=cheatcodeteleop \\
+  --teleop.id=aic \\
+  --teleop.cable_name={cable_type} \\
+  --teleop.plug_name={plug_name} \\
+  --teleop.module_name={module_name} \\
+  --teleop.port_name={trial['target_port']} \\
+  --dataset.repo_id=tapan/aic_{trial['name']}_dataset \\
+  --dataset.single_task="Insert {plug_name} into {trial['target_port']}" \\
+  --dataset.num_episodes=1 \\
+  --dataset.fps=20 \\
+  --dataset.episode_time_s=180 \\
+  --dataset.push_to_hub=false \\
+  --dataset.private=true \\
+  --display_data=false \\
+  --play_sounds=false
+"""
 
     record_script_path = f"/tmp/record_{trial['name']}_{idx}.sh"
     with open(record_script_path, "w") as f:
         f.write(record_script)
 
+    engine_cmd = f"distrobox enter -r aic_eval -- bash {engine_script_path}"
     record_cmd = f"distrobox enter -r aic_eval -- bash {record_script_path}"
-
-    engine_cmd = (
-        "distrobox enter -r aic_eval -- /bin/bash -c "
-        f"'. /entrypoint.sh "
-        f"ground_truth:=true "
-        f"spawn_task_board:=true "
-        f"spawn_cable:=true "
-        f"attach_cable_to_gripper:=true "
-        f"cable_type:={cable_type} "
-        f"task_board_x:={board_x:.4f} "
-        f"task_board_y:={board_y:.4f} "
-        f"task_board_z:=1.14 "
-        f"task_board_yaw:={board_yaw:.4f} "
-        f"gazebo_gui:=false "
-        f"launch_rviz:=false "
-        f"{rail_params}'"
-    )
 
     print(f"\n{'='*60}")
     print(f"Episode {idx} — {trial['name']} | module: {module_name} | plug: {plug_name}")
