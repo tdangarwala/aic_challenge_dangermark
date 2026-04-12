@@ -22,4 +22,6 @@ from .aic_teleop import (
     AICKeyboardJointTeleopConfig,
     AICSpaceMouseTeleop,
     AICSpaceMouseTeleopConfig,
-)
+    CheatCodeTeleop,
+    CheatCodeTeleopConfig,  
+) 
