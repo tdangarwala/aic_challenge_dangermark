@@ -71,7 +71,9 @@ def run_episode(trial, idx):
     )
 
     record_cmd = (
-        "cd ~/aic_challenge_dangermark &&"
+        "cd ~/aic_challenge_dangermark && "
+        "RMW_IMPLEMENTATION=rmw_zenoh_cpp "
+        "ZENOH_CONFIG_OVERRIDE='mode=\"peer\";connect/endpoints=[\"tcp/localhost:7447\"];transport/shared_memory/enabled=false' "
         "pixi run lerobot-record "
         "--robot.type=aic_controller "
         "--robot.id=aic "
