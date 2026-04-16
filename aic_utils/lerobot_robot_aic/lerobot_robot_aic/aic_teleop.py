@@ -32,7 +32,6 @@ from lerobot.teleoperators.keyboard import (
 )
 from lerobot.utils.errors import DeviceAlreadyConnectedError, DeviceNotConnectedError
 from lerobot_teleoperator_devices import KeyboardJointTeleop, KeyboardJointTeleopConfig
-from lerobot.common.robot_devices.teleop.factory import register_teleop
 from rclpy.executors import SingleThreadedExecutor
 
 from .aic_robot import arm_joint_names
@@ -359,7 +358,6 @@ class CheatCodeTeleopConfig(TeleoperatorConfig):
     max_windup: float = 1.0
     kp_ang: float = 1.5
 
-@register_teleop("cheatcodeteleop")
 class CheatCodeTeleop(Teleoperator):
     def __init__(self, config: CheatCodeTeleopConfig):
         super().__init__(config)
