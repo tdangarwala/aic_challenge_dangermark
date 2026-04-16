@@ -18,6 +18,10 @@ from dataclasses import dataclass, field
 from threading import Thread
 from typing import Any, cast
 
+import numpy as np
+from scipy.spatial.transform import Rotation as R
+from tf2_ros import Buffer, TransformListener
+
 import pyspacemouse
 import rclpy
 from geometry_msgs.msg import Twist
@@ -28,6 +32,7 @@ from lerobot.teleoperators.keyboard import (
 )
 from lerobot.utils.errors import DeviceAlreadyConnectedError, DeviceNotConnectedError
 from lerobot_teleoperator_devices import KeyboardJointTeleop, KeyboardJointTeleopConfig
+from lerobot.common.robot_devices.teleop.factory import register_teleop
 from rclpy.executors import SingleThreadedExecutor
 
 from .aic_robot import arm_joint_names
@@ -341,7 +346,6 @@ class AICSpaceMouseTeleop(Teleoperator):
         self._is_connected = False
         pass
 
-
 @TeleoperatorConfig.register_subclass("cheatcodeteleop")
 @dataclass(kw_only=True)
 class CheatCodeTeleopConfig(TeleoperatorConfig):
@@ -355,7 +359,7 @@ class CheatCodeTeleopConfig(TeleoperatorConfig):
     max_windup: float = 1.0
     kp_ang: float = 1.5
 
-
+@register_teleop("cheatcodeteleop")
 class CheatCodeTeleop(Teleoperator):
     def __init__(self, config: CheatCodeTeleopConfig):
         super().__init__(config)
@@ -558,5 +562,3 @@ class CheatCodeTeleop(Teleoperator):
         self._spin_thread.join(timeout=2.0)
         self._node.destroy_node()
         self._is_connected = False
-        
-
