@@ -495,9 +495,16 @@ class CheatCodeTeleop(Teleoperator):
         plug_tip_tf = self._lookup_tf("base_link", f"{self.config.cable_name}/{self.config.plug_name}_link")
         port_tf = self._lookup_tf("base_link", f"task_board/{self.config.module_name}/{self.config.port_name}_link")
 
+        if gripper_tf is None:
+            print("MISSING: gripper/tcp")
+        if plug_tip_tf is None:
+            print(f"MISSING: {self.config.cable_name}...")
+        if port_tf is None:
+            print(f"MISSING: {self.config.port_name}...")
+
         if gripper_tf is None or plug_tip_tf is None or port_tf is None:
             return {"linear.x": 0.0, "linear.y": 0.0, "linear.z": 0.0,
-                "angular.x": 0.0, "angular.y": 0.0, "angular.z": 0.0}
+                    "angular.x": 0.0, "angular.y": 0.0, "angular.z": 0.0}
 
         gripper_pos = np.array([
             gripper_tf.transform.translation.x,
