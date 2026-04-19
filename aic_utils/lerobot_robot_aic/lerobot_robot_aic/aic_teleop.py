@@ -21,6 +21,7 @@ from typing import Any, cast
 import numpy as np
 from scipy.spatial.transform import Rotation as R
 from tf2_ros import Buffer, TransformListener
+from tf2_msgs.msg import TFMessage
 
 import pyspacemouse
 import rclpy
@@ -408,7 +409,18 @@ class CheatCodeTeleop(Teleoperator):
         self._node = rclpy.create_node("cheatcodeteleop")
 
         self._tf_buffer = Buffer()
-        self._tf_listener = TransformListener(self._tf_buffer, self._node)
+        self._tf_listener = TransformListener(
+            self._tf_buffer, 
+            self._node,
+            spin_thread=False
+        )
+        # Also manually subscribe to /scoring/tf and feed it into the buffer
+        self._scoring_tf_sub = self._node.create_subscription(
+            TFMessage,
+            "/scoring/tf",
+            lambda msg: [self._tf_buffer.set_transform(t, "scoring_tf") for t in msg.transforms],
+            10
+        )
 
         self._executor = SingleThreadedExecutor()
         self._executor.add_node(self._node)
@@ -492,16 +504,15 @@ class CheatCodeTeleop(Teleoperator):
         # is called by Lerobot at each timestep
         # should return a 6D velocity command for the gripper (3D linear + 3D angular)
         gripper_tf = self._lookup_tf("base_link", "gripper/tcp")
-        plug_tip_tf = self._lookup_tf("base_link", f"{self.config.cable_name}/{self.config.plug_name}_link")
-        port_tf = self._lookup_tf("base_link", f"task_board/{self.config.module_name}/{self.config.port_name}_link")
+        port_tf = self._lookup_tf("base_link", self.config.port_name) 
+        plug_tip_tf = self._lookup_tf("base_link", self.config.plug_name)
 
         if gripper_tf is None:
             print("MISSING: gripper/tcp")
         if plug_tip_tf is None:
-            print(f"MISSING: {self.config.cable_name}...")
+            print(f"MISSING: {self.config.plug_name}")   # was wrongly printing cable_name
         if port_tf is None:
-            print(f"MISSING: {self.config.port_name}...")
-
+            print(f"MISSING: {self.config.port_name}")
         if gripper_tf is None or plug_tip_tf is None or port_tf is None:
             return {"linear.x": 0.0, "linear.y": 0.0, "linear.z": 0.0,
                     "angular.x": 0.0, "angular.y": 0.0, "angular.z": 0.0}
