@@ -489,6 +489,7 @@ class CheatCodeTeleop(Teleoperator):
         self.z_offset = 0.2
 
     def get_action(self):
+        print(self._tf_buffer.all_frames_as_string())
         # is called by Lerobot at each timestep
         # should return a 6D velocity command for the gripper (3D linear + 3D angular)
         gripper_tf = self._lookup_tf("base_link", "gripper/tcp")
