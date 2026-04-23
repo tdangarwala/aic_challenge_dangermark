@@ -468,9 +468,9 @@ class CheatCodeTeleop(Teleoperator):
         
         r_error = r_desired_gripper * r_gripper.inv()  # error between current gripper orientation and desired orientation
 
-        angular_velocity = self.config.kp_ang * r_error.as_rotvec()  # proportional control on orientation error
-        
-        return angular_velocity
+        v_angular_world = self.config.kp_ang * r_error.as_rotvec()
+        v_angular_tcp = r_gripper.inv().apply(v_angular_world)  # rotate into gripper frame
+        return v_angular_tcp
     
     #requests RO
     def _lookup_tf(self, target_frame, source_frame):
@@ -489,24 +489,19 @@ class CheatCodeTeleop(Teleoperator):
         self.z_offset = 0.2
 
     def get_action(self):
-        frames = self._tf_buffer.all_frames_as_string()
-        if frames:
-            print(frames)
-        else:
-            print("TF buffer is empty!")
         # is called by Lerobot at each timestep
         # should return a 6D velocity command for the gripper (3D linear + 3D angular)
         gripper_tf = self._lookup_tf("base_link", "gripper/tcp")
         # Change these two lines in get_action()
-        plug_tip_tf = self._lookup_tf("base_link", f"{self.config.cable_name}/sfp_tip_link")
+        plug_tip_tf = self._lookup_tf("base_link", f"{self.config.cable_name}/{self.config.plug_name}_link")
         port_tf     = self._lookup_tf("base_link", f"task_board/{self.config.module_name}/{self.config.port_name}_link")
 
         if gripper_tf is None:
             print("MISSING: gripper/tcp")
         if plug_tip_tf is None:
-            print(f"MISSING: {self.config.cable_name}...")
+            print(f"MISSING: {self.config.cable_name}/{self.config.plug_name}_link")
         if port_tf is None:
-            print(f"MISSING: {self.config.port_name}...")
+            print(f"MISSING: {self.config.module_name}/{self.config.port_name}_link")
 
         if gripper_tf is None or plug_tip_tf is None or port_tf is None:
             return {"linear.x": 0.0, "linear.y": 0.0, "linear.z": 0.0,
@@ -555,6 +550,8 @@ class CheatCodeTeleop(Teleoperator):
 
         # call calculate_velocity and calculate_angular_velocity to get linear and angular velocity commands
         linear_velocity = self.calculate_velocity(gripper_pos, plug_tip_pos, port_pos)
+        r_gripper = R.from_quat(gripper_q)
+        linear_velocity = r_gripper.inv().apply(linear_velocity)  # world -> TCP frame
         # combine linear and angular velocity into a single 6D command
         angular_velocity = self.calculate_angular_velocity(port_q, plug_tip_q, gripper_q)
 
